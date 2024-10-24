@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 import matplotlib.pyplot as plt
-from .terrain import generate_reference_and_limits
+from terrain import generate_reference_and_limits
+from control import PDController # Import the PDController class from the control module
 
 class Submarine:
     def __init__(self):
@@ -80,7 +81,8 @@ class Mission:
 
 
 class ClosedLoop:
-    def __init__(self, plant: Submarine, controller):
+    def __init__(self, plant: Submarine, controller: PDController):
+        #added the controller attribute
         self.plant = plant
         self.controller = controller
 
@@ -97,7 +99,9 @@ class ClosedLoop:
         for t in range(T):
             positions[t] = self.plant.get_position()
             observation_t = self.plant.get_depth()
+            reference_t = mission.reference[t]
             # Call your controller here
+            actions[t] = self.controller.compute_control(reference_t, observation_t)
             self.plant.transition(actions[t], disturbances[t])
 
         return Trajectory(positions)
